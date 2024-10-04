@@ -87,6 +87,58 @@ public class TrackListActivity extends AbstractTrackDeleteActivity implements Co
     // Callback when an item is selected in the contextual action mode
     private final ActivityUtils.ContextualActionModeCallback contextualActionModeCallback = new ActivityUtils.ContextualActionModeCallback() {
 
+        /**
+         * Handles a context item selection.
+         *
+         * @param itemId       the menu item id
+         * @param longTrackIds the track ids
+         * @return true if handled.
+         */
+        private boolean handleContextItem(int itemId, long... longTrackIds) {
+            Track.Id[] trackIds = new Track.Id[longTrackIds.length];
+            for (int i = 0; i < longTrackIds.length; i++) {
+                trackIds[i] = new Track.Id(longTrackIds[i]);
+            }
+
+            if (itemId == R.id.list_context_menu_show_on_map) {
+                IntentDashboardUtils.showTrackOnMap(this, false, trackIds);
+                return true;
+            }
+
+            if (itemId == R.id.list_context_menu_share) {
+                Intent intent = ShareUtils.newShareFileIntent(this, trackIds);
+                intent = Intent.createChooser(intent, null);
+                startActivity(intent);
+                return true;
+            }
+
+            if (itemId == R.id.list_context_menu_edit) {
+                Intent intent = IntentUtils.newIntent(this, TrackEditActivity.class)
+                        .putExtra(TrackEditActivity.EXTRA_TRACK_ID, trackIds[0]);
+                startActivity(intent);
+                return true;
+            }
+
+            if (itemId == R.id.list_context_menu_delete) {
+                deleteTracks(trackIds);
+                return true;
+            }
+
+            if (itemId == R.id.list_context_menu_aggregated_stats) {
+                Intent intent = IntentUtils.newIntent(this, AggregatedStatisticsActivity.class)
+                        .putParcelableArrayListExtra(AggregatedStatisticsActivity.EXTRA_TRACK_IDS, new ArrayList<>(Arrays.asList(trackIds)));
+                startActivity(intent);
+                return true;
+            }
+
+            if (itemId == R.id.list_context_menu_select_all) {
+                adapter.setAllSelected(true);
+                return false;
+            }
+
+            return false;
+        }
+
         @Override
         public void onPrepare(Menu menu, int[] positions, long[] trackIds, boolean showSelectAll) {
             boolean isSingleSelection = trackIds.length == 1;
@@ -333,57 +385,6 @@ public class TrackListActivity extends AbstractTrackDeleteActivity implements Co
         }
     }
 
-    /**
-     * Handles a context item selection.
-     *
-     * @param itemId       the menu item id
-     * @param longTrackIds the track ids
-     * @return true if handled.
-     */
-    private boolean handleContextItem(int itemId, long... longTrackIds) {
-        Track.Id[] trackIds = new Track.Id[longTrackIds.length];
-        for (int i = 0; i < longTrackIds.length; i++) {
-            trackIds[i] = new Track.Id(longTrackIds[i]);
-        }
-
-        if (itemId == R.id.list_context_menu_show_on_map) {
-            IntentDashboardUtils.showTrackOnMap(this, false, trackIds);
-            return true;
-        }
-
-        if (itemId == R.id.list_context_menu_share) {
-            Intent intent = ShareUtils.newShareFileIntent(this, trackIds);
-            intent = Intent.createChooser(intent, null);
-            startActivity(intent);
-            return true;
-        }
-
-        if (itemId == R.id.list_context_menu_edit) {
-            Intent intent = IntentUtils.newIntent(this, TrackEditActivity.class)
-                    .putExtra(TrackEditActivity.EXTRA_TRACK_ID, trackIds[0]);
-            startActivity(intent);
-            return true;
-        }
-
-        if (itemId == R.id.list_context_menu_delete) {
-            deleteTracks(trackIds);
-            return true;
-        }
-
-        if (itemId == R.id.list_context_menu_aggregated_stats) {
-            Intent intent = IntentUtils.newIntent(this, AggregatedStatisticsActivity.class)
-                    .putParcelableArrayListExtra(AggregatedStatisticsActivity.EXTRA_TRACK_IDS, new ArrayList<>(Arrays.asList(trackIds)));
-            startActivity(intent);
-            return true;
-        }
-
-        if (itemId == R.id.list_context_menu_select_all) {
-            adapter.setAllSelected(true);
-            return false;
-        }
-
-        return false;
-    }
 
     public void onGpsStatusChanged(GpsStatusValue newStatus) {
         gpsStatusValue = newStatus;
